@@ -19,20 +19,20 @@ const char *password = "byvejen55";
 
 const int output = 2;
 
-#include <FastLED.h>
-// How many leds in your strip?
-#define NUM_LEDS 4
-// For led chips like WS2812, which have a data line, ground, and power, you just
-// need to define DATA_PIN.  For led chipsets that are SPI based (four wires - data, clock,
-// ground, and power), like the LPD8806 define both DATA_PIN and CLOCK_PIN
-// Clock pin only needed for SPI based chipsets when not using hardware SPI
-#define DATA_PIN 0
-//#define CLOCK_PIN 13
+#include <Adafruit_NeoPixel.h>
+#define RGBPIN 6
+#define NUM_LED 8
+#define DELAYVAL 500
 
-// Define the array of leds
-CRGB leds[NUM_LEDS];
-
-
+// Parameter 1 = number of pixels in strip
+// Parameter 2 = Arduino pin number (most are valid)
+// Parameter 3 = pixel type flags, add together as needed:
+//   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
+//   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
+//   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
+//   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
+//   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LED, RGBPIN, NEO_GRB + NEO_KHZ800);
 
 
 // HTML web page
@@ -112,6 +112,10 @@ void setup(void)
   pinMode(output, OUTPUT);
   digitalWrite(output, HIGH);
 
+  strip.begin();
+  strip.setBrightness(50);
+  strip.show(); // Initialize all pixels to 'off'
+
   // Send web page to client
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send_P(200, "text/html", index_html); });
@@ -134,21 +138,25 @@ void setup(void)
   AsyncElegantOTA.begin(&server); // Start ElegantOTA
   server.begin();
   Serial.println("HTTP server started");
-  // FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS); // GRB ordering is assumed
+  
 
-  // FastLED.addLeds<WS2812, DATA_PIN, RGB>(leds, NUM_LEDS);  // GRB ordering is typical
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);  // GRB ordering is typical
 }
 
 void loop(void)
 {
-  for (int dot = 0; dot < NUM_LEDS; dot++)
-  {
-    leds[dot] = CRGB::Blue;
-    FastLED.show();
-    // clear this led for the next time around the loop
-    leds[dot] = CRGB::Black;
-    delay(300);
-    
+  strip.clear(); // Set all pixel colors to 'off'
+
+  // The first NeoPixel in a strand is #0, second is 1, all the way up
+  // to the count of pixels minus one.
+  for (int i = 0; i < NUM_LED; i++)
+  { // For each pixel...
+
+    // pixels.Color() takes RGB values, from 0,0,0 up to 255,255,255
+    // Here we're using a moderately bright green color:
+    strip.setPixelColor(i, strip.Color(0, 150, 0));
+
+    strip.show(); // Send the updated pixel colors to the hardware.
+
+    delay(DELAYVAL); // Pause before next pass through loop
   }
 }
