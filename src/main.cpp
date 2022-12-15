@@ -19,6 +19,22 @@ const char *password = "byvejen55";
 
 const int output = 2;
 
+#include <FastLED.h>
+// How many leds in your strip?
+#define NUM_LEDS 4
+// For led chips like WS2812, which have a data line, ground, and power, you just
+// need to define DATA_PIN.  For led chipsets that are SPI based (four wires - data, clock,
+// ground, and power), like the LPD8806 define both DATA_PIN and CLOCK_PIN
+// Clock pin only needed for SPI based chipsets when not using hardware SPI
+#define DATA_PIN 0
+//#define CLOCK_PIN 13
+
+// Define the array of leds
+CRGB leds[NUM_LEDS];
+
+
+
+
 // HTML web page
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
@@ -118,8 +134,21 @@ void setup(void)
   AsyncElegantOTA.begin(&server); // Start ElegantOTA
   server.begin();
   Serial.println("HTTP server started");
+  // FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS); // GRB ordering is assumed
+
+  // FastLED.addLeds<WS2812, DATA_PIN, RGB>(leds, NUM_LEDS);  // GRB ordering is typical
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);  // GRB ordering is typical
 }
 
 void loop(void)
 {
+  for (int dot = 0; dot < NUM_LEDS; dot++)
+  {
+    leds[dot] = CRGB::Blue;
+    FastLED.show();
+    // clear this led for the next time around the loop
+    leds[dot] = CRGB::Black;
+    delay(300);
+    
+  }
 }
